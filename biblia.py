@@ -3,9 +3,7 @@
 
 Este script permite leer y mostrar información de la Biblia a partir de un archivo en formato Zefania XML.
 Puede listar todos los libros y capítulos, mostrar un libro completo, un capítulo específico
-o un versículo en particular.
-
-El archivo Zefania XML debe estar ubicado en el directorio de descargas del usuario (~Downloads/biblia.xml).
+o un versículo en particular, y también obtener un versículo aleatorio.
 
 Uso:
     ./biblia.py
@@ -13,17 +11,21 @@ Uso:
     ./biblia.py [libro] [capítulo]
     ./biblia.py [libro] [capítulo] [versículo]
     ./biblia.py -s "texto a buscar"
+    ./biblia.py -r
 """
 import os
 import xml.etree.ElementTree as ET
 import sys
 import difflib
 import tempfile
+import random
 
 
 class BibleReader:
-    def __init__(self, file_path):
-        self.file_path = file_path
+    def __init__(self):
+        # Usar la ruta relativa al archivo biblia.xml
+        self.file_path = os.path.join(os.path.dirname(__file__), "biblia.xml")
+        self.load_xml_file()
 
     def load_xml_file(self):
         try:
@@ -161,18 +163,57 @@ class BibleReader:
             )
         return "\n".join(output)
 
+    def get_random_verse(self):
+        # Elegir un libro aleatorio
+        books = self.root.findall(".//BIBLEBOOK")
+        if not books:
+            return "No se encontraron libros."
+
+        random_book = random.choice(books)
+        book_name = random_book.get("bname")
+
+        # Elegir un capítulo aleatorio de ese libro
+        chapters = random_book.findall(".//CHAPTER")
+        if not chapters:
+            return f"El libro '{book_name}' no tiene capítulos."
+
+        random_chapter = random.choice(chapters)
+        chapter_number = random_chapter.get("cnumber")
+
+        # Elegir un versículo aleatorio de ese capítulo
+        verses = random_chapter.findall(".//VERS")
+        if not verses:
+            return f"El capítulo '{chapter_number}' del libro '{book_name}' no tiene versículos."
+
+        random_verse = random.choice(verses)
+        verse_number = random_verse.get("vnumber")
+        verse_text = random_verse.text
+
+        return f"[{book_name} {chapter_number}:{verse_number}] \n{verse_text}"
+
+    def display_output(self, output):
+        """Escribe la salida en un archivo temporal y la muestra."""
+        with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp_file:
+            temp_file.write(output)
+            temp_file_path = temp_file.name
+
+        os.system(f"bat --style=plain {temp_file_path}")
+        os.remove(temp_file_path)
+
 
 def main():
-    file_path = os.path.expanduser("~/Downloads/biblia.xml")
-    bible_reader = BibleReader(file_path)
-    bible_reader.load_xml_file()
+
+    bible_reader = BibleReader()
 
     args = sys.argv[1:]
 
     if len(args) == 0:
         output = bible_reader.list_books()
     elif len(args) == 1:
-        output = bible_reader.show_book(args[0])
+        if args[0] == "-r":
+            output = bible_reader.get_random_verse().strip()
+        else:
+            output = bible_reader.show_book(args[0])
     elif len(args) == 2 and args[0] == "-s":
         output = bible_reader.search_text(args[1])
     elif len(args) == 2:
@@ -182,13 +223,8 @@ def main():
     else:
         output = "Error: Número de argumentos no válido."
 
-    # Escribir salida en un archivo temporal y luego mostrarlo con cat
-    with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp_file:
-        temp_file.write(output)
-        temp_file_path = temp_file.name
-
-    os.system(f"cat {temp_file_path}")
-    os.remove(temp_file_path)
+    # Llamar al nuevo método para mostrar la salida
+    bible_reader.display_output(output)
 
 
 if __name__ == "__main__":
