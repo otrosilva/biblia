@@ -15,4 +15,7 @@ Este script en Python permite leer y mostrar información de la Biblia a partir 
 ./biblia.py [libro] # -- Muestra todos los capítulos del libro elegido.
 ./biblia.py [libro] [capítulo] # -- Muestra todos los versículos del capítulo elegido del libro.
 ./biblia.py [libro] [capítulo] [versículo] # -- Muestra el versículo correspondiente.
+
+❯ biblia Proverbios 21 9
+[Proverbios 21:9] Mejor es vivir en un rincón de zaquizamí. Que con la mujer rencillosa en espaciosa casa.
 ```
