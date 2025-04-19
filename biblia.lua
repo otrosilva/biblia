@@ -14,7 +14,7 @@ local script_dir = script_path:match("(.*[/\\])") or "./" -- Obtener el director
 -- Añadir el directorio del script a package.path
 package.path = package.path .. ";" .. script_dir .. "?.lua"
 
--- Ahora puedes requerir los módulos sin necesidad de concatenar la ruta
+-- módulos locales
 local loader = require("loader")
 local output = require("output")
 local books = require("books")
